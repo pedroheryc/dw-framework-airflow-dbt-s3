@@ -28,3 +28,12 @@ def put_bytes(
         extra["ContentType"] = content_type
 
     client.put_object(Bucket=path.bucket, Key=path.key, Body=data, **extra)
+
+def join_key(*parts: str) -> str:
+    cleaned = []
+    for p in parts:
+        p = (p or "").strip("/")
+        if p:
+            cleaned.append(p)
+    return "/".join(cleaned)
+
