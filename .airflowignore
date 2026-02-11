@@ -1,0 +1,9 @@
+^tests/
+^dbt/
+^src/
+^include/
+^docker/
+^\.github/
+^README\.md$
+^pyproject\.toml$
+^compose\.ya?ml$
