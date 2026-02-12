@@ -1,30 +1,51 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Optional
 
-import boto3
+from lf.datasets.contract import DatasetContract
 
 
-@dataclass(frozen=True)
-class S3Path:
-    bucket: str
-    key: str
+def join_key(*parts: str) -> str:
+    cleaned = []
+    for p in parts:
+        p = (p or "").strip("/")
+        if p:
+            cleaned.append(p)
+    return "/".join(cleaned)
 
 
-def get_s3_client(region: str):
-    return boto3.client("s3", region_name=region)
+def ingest_date_utc() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
-def put_bytes(
+def raw_prefix(contract: DatasetContract) -> str:
+    return join_key("raw", contract.source, contract.dataset)
+
+
+def raw_object_key(
     *,
-    client,
-    path: S3Path,
-    data: bytes,
-    content_type: Optional[str] = None,
-) -> None:
-    extra = {}
-    if content_type:
-        extra["ContentType"] = content_type
+    s3_prefix: str,
+    contract: DatasetContract,
+    run_id: str,
+    ext: str,
+    part: int = 1,
+    ingest_date: Optional[str] = None,
+) -> str:
+    ingest_date = ingest_date or ingest_date_utc()
+    return join_key(
+        s3_prefix,
+        raw_prefix(contract),
+        f"ingest_date={ingest_date}",
+        f"run_id={run_id}",
+        f"part-{part:04d}.{ext.lstrip('.')}",
+    )
 
-    client.put_object(Bucket=path.bucket, Key=path.key, Body=data, **extra)
+
+def manifest_key(*, s3_prefix: str, contract: DatasetContract, run_id: str) -> str:
+    return join_key(
+        s3_prefix,
+        raw_prefix(contract),
+        "_manifests",
+        f"run_id={run_id}.json",
+    )
