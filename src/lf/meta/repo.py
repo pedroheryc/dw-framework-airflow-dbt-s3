@@ -147,3 +147,12 @@ def finish_run_failed(engine: Engine, run: RunFinishFailed) -> None:
                 "error_message": run.error_message,
             },
         )
+        
+def update_stg_rows(engine: Engine, *, run_id: str, stg_rows: int) -> None:
+    sql = """
+    update meta.ingestion_runs
+    set stg_rows = :stg_rows
+    where run_id = :run_id;
+    """
+    with engine.begin() as conn:
+        conn.execute(text(sql), {"run_id": run_id, "stg_rows": stg_rows})
