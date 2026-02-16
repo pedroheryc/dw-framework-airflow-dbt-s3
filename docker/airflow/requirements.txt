@@ -6,4 +6,5 @@ pydantic==2.8.2
 pydantic-settings==2.4.0
 SQLAlchemy==2.0.32
 requests==2.32.3
-
+os
+office365
